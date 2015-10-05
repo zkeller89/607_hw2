@@ -21,19 +21,20 @@ def compute_pageranks(google_mat, tol=1e-8):
 
     # TASK 1.5.1
     # start with the unif distribution
-    dist = np.zeros(n)
+    dist = np.zeros(n)[:,None]
+    dist.fill(1./n)
 
     rel_change = 1.0
     while rel_change > tol:
         # TASK 1.5.2
         # perform the power method iteration
-        new_dist = dist
+        new_dist = np.dot(dist.transpose(), google_mat).transpose()
 
         # compute relative change in iterate
         rel_change = LA.norm(new_dist - dist)/LA.norm(dist)
         dist = new_dist
 
-    if not np.allclose(dist.dot(google_mat), dist):
+    if not np.allclose(dist.transpose().dot(google_mat).transpose(), dist):
         raise Exception('Power method did not find the stationary \
                         distribution')
 
@@ -100,7 +101,7 @@ def main():
 
     # TASK 1.6
     # set top_10 to indices of top 10 pages with largest pageranks
-    top_10 = None
+    top_10 = np.argpartition(-pageranks.flatten(), range(10))[:10]
     print page_names[top_10]
 
     # compute eigenvalues and eigenvectors
@@ -111,7 +112,7 @@ def main():
     # methods to find those indices where the eigenvalue vector
     # w has entries (numerically) close to 1
     # Make sure close_to_1 is a 1-d ndarray of indices
-    close_to_1 = np.arange(n)
+    close_to_1 = np.array(np.nonzero(np.isclose(w,np.ones(n))))
 
     if close_to_1.size:
         ind_of_1 = close_to_1[0]
@@ -124,7 +125,7 @@ def main():
     # TASK 1.8
     # eigenvector will be normalized to have euclidean norm 1
     # re-normalize it to be a probability distribution
-    pageranks_eig = pageranks_eig
+    pageranks_eig = pageranks_eig / pageranks_eig.sum()
 
     # check whether our answer agrees with eig computation
     print 'Pagerank computations via power method and numpy.linalg.eig',
