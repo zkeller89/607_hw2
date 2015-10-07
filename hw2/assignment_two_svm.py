@@ -27,7 +27,7 @@ def svm_train(instances, labels, kernel_func, C=1.0):
     # define the dual objective function
     def func(alpha):
         """ The SVM dual objective. """
-        func_return = -alpha.tranpose().dot(np.ones(n)) + \
+        func_return = -alpha.transpose().dot(np.ones(n)) + \
                      0.5 * alpha.transpose().dot(kernel_mat * \
                      labels.dot(labels.transpose())).dot(alpha)
 
@@ -37,12 +37,13 @@ def svm_train(instances, labels, kernel_func, C=1.0):
     # define the gradient of the dual objective function
     def func_deriv(alpha):
         """ Gradient of the SVM dual objective. """
-
-        pass
+        func_return = -np.ones(n) + (kernel_mat * \
+                      labels.dot(labels.transpose())).dot(alpha)
+        return func_return
 
     # TASK 2.4
     # this should be a list containing n pairs (0.0, C)
-    box_constraints = []
+    box_constraints = [(0.0, C) for x in xrange(n)]
 
     # initial vector for optimization
     alpha0 = np.zeros(n)
@@ -64,12 +65,12 @@ def svm_train(instances, labels, kernel_func, C=1.0):
 
     # TASK 2.5
     # retain only non-zero alpha_y entries
-    alpha_y_nz = alpha_y
+    alpha_y_nz = alpha_y[np.nonzero(alpha_y)]
 
     # TASK 2.6
     # retain those instances with non-zero alpha_y entries
     # these are the "support vectors"
-    support_vectors = instances
+    support_vectors = instances[np.nonzero(alpha_y)]
 
     num_sv = alpha_y_nz.size  # no. of support vectors
 
@@ -78,8 +79,15 @@ def svm_train(instances, labels, kernel_func, C=1.0):
     # alpha_y_nz
     def classifier(point):
         """ Returns 1 if point is classified as positive, 0 otherwise. """
-
-        pass
+        
+        #fill k_array with kernel_func(x_new, x[i])
+        k_array = np.empty(num_sv)
+        for i in xrange(num_sv):
+                k_array[i] = kernel_func(point, support_vectors[i])
+        
+        label_sigma = alpha_y_nz.dot(k_array)
+        
+        return 1 * (label_sigma > 0)
 
     return classifier
 
@@ -89,25 +97,29 @@ def evaluate_classifier(classifier, instances, labels):
 
     # TASK 2.8.1
     # extract positive instances, their labels
-    positives = positives
-    pos_labels = pos_labels
+    positives = instances[labels == 1]
+    pos_labels = labels[labels == 1]
 
     # TASK 2.8.2
     # find the predictions of classifier on positives
     # and count the no. of correct predictions therein
-    pos_predictions = pos_predictions
-    pos_correct = pos_correct
+    pos_predictions = np.apply_along_axis(classifier,
+                                          axis = 1, 
+                                          arr = positives)
+    pos_correct = sum(pos_predictions)
 
     # TASK 2.8.3
     # extract negative instances, their labels
-    negatives = negatives
-    neg_labels = neg_labels
+    negatives = instances[labels == 0]
+    neg_labels = labels[labels == 0]
 
     # TASK 2.8.4
     # find the predictions of classifier on negatives
     # and count the no. of correct predictions therein
-    neg_predictions = neg_predictions
-    neg_correct = neg_correct
+    neg_predictions = np.apply_along_axis(classifier,
+                                          axis = 1, 
+                                          arr = negatives)
+    neg_correct = sum(neg_predictions == 0)
 
     confusion_matrix = np.array([[pos_correct, pos_labels.size - pos_correct],
                                  [neg_labels.size - neg_correct, neg_correct]],
