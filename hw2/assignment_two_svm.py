@@ -82,7 +82,7 @@ def svm_train(instances, labels, kernel_func, C=1.0):
         
         #fill k_array with kernel_func(x_new, x[i])
         k_array = np.empty(num_sv)
-        for i in xrange(num_sv):
+        for i in xrange(num_sv): #HOW TO NOT USE FOR LOOP HERE?
                 k_array[i] = kernel_func(point, support_vectors[i])
         
         label_sigma = alpha_y_nz.dot(k_array)
