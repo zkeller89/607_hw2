@@ -27,23 +27,27 @@ def svm_train(instances, labels, kernel_func, C=1.0):
     # define the dual objective function
     def func(alpha):
         """ The SVM dual objective. """
-        func_return = -alpha.transpose().dot(np.ones(n)) + \
-                     0.5 * alpha.transpose().dot(kernel_mat * \
-                     labels.dot(labels.transpose())).dot(alpha)
+                     
+        objective_func = -np.sum(alpha) + 0.5 * alpha.dot(kernel_mat * \
+                         np.outer(pm_labels, pm_labels)).dot(alpha)
+        
+        #-np.sum(alpha) + (alpha.dot(kernel_mat * np.outer(pm_labels, pm_labels)).dot(alpha)) * 0.5
 
-        return func_return
+        return objective_func
 
     # TASK 2.3
     # define the gradient of the dual objective function
     def func_deriv(alpha):
         """ Gradient of the SVM dual objective. """
-        func_return = -np.ones(n) + (kernel_mat * \
-                      labels.dot(labels.transpose())).dot(alpha)
+        func_return = -np.ones(n) + (kernel_mat * np.outer(pm_labels, pm_labels)).dot(alpha)
+        
+        # gradient = -np.ones(n) + (kernel_mat * (np.out(pm_labels, pm_labels))).dot(alpha)        
+        
         return func_return
 
     # TASK 2.4
     # this should be a list containing n pairs (0.0, C)
-    box_constraints = [(0.0, C) for x in xrange(n)]
+    box_constraints = [(0.0, C)] * n
 
     # initial vector for optimization
     alpha0 = np.zeros(n)
@@ -72,8 +76,6 @@ def svm_train(instances, labels, kernel_func, C=1.0):
     # these are the "support vectors"
     support_vectors = instances[np.nonzero(alpha_y)]
 
-    num_sv = alpha_y_nz.size  # no. of support vectors
-
     # TASK 2.7
     # define the svm classifier using kernel_func, support_vectors, and
     # alpha_y_nz
@@ -81,11 +83,8 @@ def svm_train(instances, labels, kernel_func, C=1.0):
         """ Returns 1 if point is classified as positive, 0 otherwise. """
         
         #fill k_array with kernel_func(x_new, x[i])
-        k_array = np.empty(num_sv)
-        for i in xrange(num_sv): #HOW TO NOT USE FOR LOOP HERE?
-                k_array[i] = kernel_func(point, support_vectors[i])
-        
-        label_sigma = alpha_y_nz.dot(k_array)
+        k_array = np.array([kernel_func(point, x) for x in support_vectors])
+        label_sigma = alpha_y_nz.dot(k_array)      
         
         return 1 * (label_sigma > 0)
 
@@ -99,6 +98,8 @@ def evaluate_classifier(classifier, instances, labels):
     # extract positive instances, their labels
     positives = instances[labels == 1]
     pos_labels = labels[labels == 1]
+    
+    
 
     # TASK 2.8.2
     # find the predictions of classifier on positives
@@ -106,7 +107,7 @@ def evaluate_classifier(classifier, instances, labels):
     pos_predictions = np.apply_along_axis(classifier,
                                           axis = 1, 
                                           arr = positives)
-    pos_correct = sum(pos_predictions)
+    pos_correct = sum(pos_predictions)    
 
     # TASK 2.8.3
     # extract negative instances, their labels
