@@ -28,7 +28,8 @@ def compute_pageranks(google_mat, tol=1e-8):
     while rel_change > tol:
         # TASK 1.5.2
         # perform the power method iteration
-        new_dist = np.dot(dist.transpose(), google_mat).transpose()
+        new_dist = np.dot(dist.T, google_mat)
+        new_dist = new_dist.T
 
         # compute relative change in iterate
         rel_change = LA.norm(new_dist - dist)/LA.norm(dist)
@@ -74,7 +75,7 @@ def main():
     # i.e. nodes without any out links.
     dangling = np.zeros(n)
     dangling[np.sum(adj_mat, axis = 1) == 0] = 1
-    dangling.reshape(n,1)
+    dangling = dangling[:, None]
 
     # TASK 1.3
     # normalize non-zero rows, keep zero rows as is
@@ -85,7 +86,7 @@ def main():
 
     # TASK 1.4
     # make matrix stochastic
-    rank_one_change = 1./n * dangling[:,None].dot(np.ones(n)[:,None].transpose())
+    rank_one_change = np.outer(dangling,np.ones(n)) / n
     adj_mat_stoch = adj_mat_norm + rank_one_change
 
     # rows of adj_mat_stoch should all sum to 1
@@ -126,6 +127,7 @@ def main():
     # eigenvector will be normalized to have euclidean norm 1
     # re-normalize it to be a probability distribution
     pageranks_eig = pageranks_eig / pageranks_eig.sum()
+    pageranks_eig = pageranks_eig[:,None]
 
     # check whether our answer agrees with eig computation
     print 'Pagerank computations via power method and numpy.linalg.eig',
