@@ -74,7 +74,7 @@ def main():
     # create 0-1 array with 1's for dangling nodes,
     # i.e. nodes without any out links.
     dangling = np.zeros(n)
-    dangling[np.sum(adj_mat, axis = 1) == 0] = 1
+    dangling[out_links == 0] = 1
     dangling = dangling[:, None]
 
     # TASK 1.3

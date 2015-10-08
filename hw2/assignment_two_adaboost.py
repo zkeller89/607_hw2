@@ -31,28 +31,36 @@ def weak_learner(instances, labels, dist):
     error using weights from the distribution dist.
 
     """
-    n = len(instances[0])
     m = len(labels)
+    n = len(instances[0])
     s = None
     j_star = None
-    threshold = .75 #HOW TO MINIMIZE THRESHOLD?????
+    theta = None
       
-    err_pos = np.empty(n)
-    err_neg = np.empty(n)
+    err_pos = np.zeros([m, n])
+    err_neg = np.zeros([m, n])
     
     for i in xrange(m):
         for j in xrange(n):
-            err_pos = (instances[i][j] < threshold) * dist[i]
-            err_neg = (-1 * instances[i][j] < threshold) * dist[i]
+            for k in xrange(m):
+                err_pos[k, j] += ((instances[i,j] < instances[k,j]) != \
+                                   labels[i]) * dist[i]
+                err_neg[k, j] += ((-1 * instances[i,j] < instances[k,j]) != \
+                                   labels[i] ) * dist[i]
     
     if np.amin(err_neg) < np.amin(err_pos):
         s = -1
-        j_star = np.argmin(err_neg)
+        j_star = np.unravel_index(err_neg.argmin(), err_neg.shape)[1]
+        theta = instances[np.unravel_index(err_neg.argmin(), err_neg.shape)]
     else:
         s = 1
-        j_star = np.argmin(err_pos)
+        j_star = np.unravel_index(err_pos.argmin(), err_pos.shape)[1]
+        theta = instances[np.unravel_index(err_pos.argmin(), err_pos.shape)]
     
-    return lambda x: s * x[j_star] < threshold
+    print "threshold is " + str(theta)
+    print "j_star is " + str(j_star)
+    print "s is " + str(s)
+    return lambda x: (s * x[j_star]) < theta
     
 
 # TASK 3.2
@@ -67,7 +75,7 @@ def compute_error(h, instances, labels, dist):
     error_vec = np.empty(n)
     
     for i in xrange(n):
-        error_vec[i] = (h(instances[i]) == labels[i]) * 1
+        error_vec[i] = (h(instances[i]) != labels[i]) * 1
     
     return dist.dot(error_vec)
 
