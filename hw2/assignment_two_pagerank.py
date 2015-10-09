@@ -21,7 +21,7 @@ def compute_pageranks(google_mat, tol=1e-8):
 
     # TASK 1.5.1
     # start with the unif distribution
-    dist = np.zeros(n)[:,None]
+    dist = np.zeros(n)[:, None]
     dist.fill(1./n)
 
     rel_change = 1.0
@@ -65,7 +65,7 @@ def main():
     # construct adjacency matrix with 1's exactly in
     # positions specified by row_id, col_id pairs in edges
     adj_mat = np.zeros((n, n))
-    adj_mat[edges[:,0], edges[:,1]] = 1
+    adj_mat[edges[:, 0], edges[:, 1]] = 1
 
     # construct 1d array of no. of outlinks
     out_links = np.sum(adj_mat, axis=1)
@@ -79,14 +79,13 @@ def main():
 
     # TASK 1.3
     # normalize non-zero rows, keep zero rows as is
-    rows_sums = adj_mat.sum(axis = 1)
-    rows_sums[rows_sums[:] == 0 ] = 1
+    rows_sums = adj_mat.sum(axis=1)
+    rows_sums[rows_sums[:] == 0] = 1
     adj_mat_norm = adj_mat / rows_sums[:, np.newaxis]
-
 
     # TASK 1.4
     # make matrix stochastic
-    rank_one_change = np.outer(dangling,np.ones(n)) / n
+    rank_one_change = np.outer(dangling, np.ones(n)) / n
     adj_mat_stoch = adj_mat_norm + rank_one_change
 
     # rows of adj_mat_stoch should all sum to 1
@@ -113,7 +112,7 @@ def main():
     # methods to find those indices where the eigenvalue vector
     # w has entries (numerically) close to 1
     # Make sure close_to_1 is a 1-d ndarray of indices
-    close_to_1 = np.array(np.nonzero(np.isclose(w,np.ones(n))))
+    close_to_1 = np.array(np.nonzero(np.isclose(w, np.ones(n))))
 
     if close_to_1.size:
         ind_of_1 = close_to_1[0]
@@ -127,7 +126,7 @@ def main():
     # eigenvector will be normalized to have euclidean norm 1
     # re-normalize it to be a probability distribution
     pageranks_eig = pageranks_eig / pageranks_eig.sum()
-    pageranks_eig = pageranks_eig[:,None]
+    pageranks_eig = pageranks_eig[:, None]
 
     # check whether our answer agrees with eig computation
     print 'Pagerank computations via power method and numpy.linalg.eig',

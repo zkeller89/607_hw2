@@ -27,11 +27,9 @@ def svm_train(instances, labels, kernel_func, C=1.0):
     # define the dual objective function
     def func(alpha):
         """ The SVM dual objective. """
-                     
-        objective_func = -np.sum(alpha) + 0.5 * alpha.dot(kernel_mat * \
-                         np.outer(pm_labels, pm_labels)).dot(alpha)
-        
-        #-np.sum(alpha) + (alpha.dot(kernel_mat * np.outer(pm_labels, pm_labels)).dot(alpha)) * 0.5
+
+        objective_func = -np.sum(alpha) + 0.5 * \
+            alpha.dot(kernel_mat * np.outer(pm_labels, pm_labels)).dot(alpha)
 
         return objective_func
 
@@ -39,10 +37,9 @@ def svm_train(instances, labels, kernel_func, C=1.0):
     # define the gradient of the dual objective function
     def func_deriv(alpha):
         """ Gradient of the SVM dual objective. """
-        func_return = -np.ones(n) + (kernel_mat * np.outer(pm_labels, pm_labels)).dot(alpha)
-        
-        # gradient = -np.ones(n) + (kernel_mat * (np.out(pm_labels, pm_labels))).dot(alpha)        
-        
+        func_return = -np.ones(n) + \
+            (kernel_mat * np.outer(pm_labels, pm_labels)).dot(alpha)
+
         return func_return
 
     # TASK 2.4
@@ -81,11 +78,10 @@ def svm_train(instances, labels, kernel_func, C=1.0):
     # alpha_y_nz
     def classifier(point):
         """ Returns 1 if point is classified as positive, 0 otherwise. """
-        
-        #fill k_array with kernel_func(x_new, x[i])
+
         k_array = np.array([kernel_func(point, x) for x in support_vectors])
-        label_sigma = alpha_y_nz.dot(k_array)      
-        
+        label_sigma = alpha_y_nz.dot(k_array)
+
         return 1 * (label_sigma > 0)
 
     return classifier
@@ -98,16 +94,14 @@ def evaluate_classifier(classifier, instances, labels):
     # extract positive instances, their labels
     positives = instances[labels == 1]
     pos_labels = labels[labels == 1]
-    
-    
 
     # TASK 2.8.2
     # find the predictions of classifier on positives
     # and count the no. of correct predictions therein
     pos_predictions = np.apply_along_axis(classifier,
-                                          axis = 1, 
-                                          arr = positives)
-    pos_correct = sum(pos_predictions)    
+                                          axis=1,
+                                          arr=positives)
+    pos_correct = sum(pos_predictions)
 
     # TASK 2.8.3
     # extract negative instances, their labels
@@ -118,8 +112,8 @@ def evaluate_classifier(classifier, instances, labels):
     # find the predictions of classifier on negatives
     # and count the no. of correct predictions therein
     neg_predictions = np.apply_along_axis(classifier,
-                                          axis = 1, 
-                                          arr = negatives)
+                                          axis=1,
+                                          arr=negatives)
     neg_correct = sum(neg_predictions == 0)
 
     confusion_matrix = np.array([[pos_correct, pos_labels.size - pos_correct],

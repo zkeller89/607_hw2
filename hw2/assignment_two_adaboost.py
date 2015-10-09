@@ -31,34 +31,43 @@ def weak_learner(instances, labels, dist):
     error using weights from the distribution dist.
 
     """
-    m = len(labels)
     n = len(instances[0])
-    s = None
-    j_star = None
-    theta = None
-      
-    err_pos = np.zeros([m, n])
-    err_neg = np.zeros([m, n])
-    
-    for i in xrange(m):
-        for j in xrange(n):
-            for k in xrange(m):
-                err_pos[k, j] += ((instances[i,j] < instances[k,j]) != \
-                                   labels[i]) * dist[i]
-                err_neg[k, j] += ((-1 * instances[i,j] < instances[k,j]) != \
-                                   labels[i] ) * dist[i]
-    
-    if np.amin(err_neg) < np.amin(err_pos):
-        s = -1
-        j_star = np.unravel_index(err_neg.argmin(), err_neg.shape)[1]
-        theta = instances[np.unravel_index(err_neg.argmin(), err_neg.shape)]
-    else:
-        s = 1
-        j_star = np.unravel_index(err_pos.argmin(), err_pos.shape)[1]
-        theta = instances[np.unravel_index(err_pos.argmin(), err_pos.shape)]
-    
-    return lambda x: (s * x[j_star]) < theta
-    
+    thetas = np.empty(n)
+    ss = np.empty(n)
+    errs = np.empty(n)
+
+    for j in xrange(n):
+
+        feats = sorted(set(instances[:, j]))
+        feats.append(float('inf'))
+        thresh_tests = [float('-inf')] + feats
+
+        num_thresh_tests = len(thresh_tests)
+        temp = np.zeros((2, num_thresh_tests))
+
+        for k in xrange(num_thresh_tests):
+            temp[0, k] += ((-1 * instances[:, j] <
+                           thresh_tests[k]) != labels).dot(dist)
+            temp[1, k] += ((instances[:, j] <
+                           thresh_tests[k]) != labels).dot(dist)
+
+            thresh_min_index = temp.argmin()
+
+            thetas[j] = thresh_tests[np.unravel_index(temp.argmin(),
+                                     temp.shape)[1]]
+
+            if thresh_min_index < num_thresh_tests:
+                ss[j] = -1
+            else:
+                ss[j] = 1
+
+            errs[j] = temp.flatten()[thresh_min_index]
+
+    min_err_index = errs.argmin()
+
+    return lambda x: (ss[min_err_index] * x[min_err_index]) < \
+        thetas[min_err_index]
+
 
 # TASK 3.2
 # Complete the function definition below
@@ -68,12 +77,12 @@ def compute_error(h, instances, labels, dist):
 
     Compute weights from the supplied distribution dist.
     """
-    n = len(instances)    
+    n = len(instances)
     error_vec = np.empty(n)
-    
+
     for i in xrange(n):
         error_vec[i] = (h(instances[i]) != labels[i]) * 1
-    
+
     return dist.dot(error_vec)
 
 
@@ -86,15 +95,15 @@ def update_dist(h, instances, labels, dist, alpha):
 
     n = len(instances)
     new_dist = np.empty(n)
-    
+
     for i in xrange(n):
         if h(instances[i]) == labels[i]:
             new_dist[i] = dist[i] * np.exp(-alpha)
         else:
-            new_dist[i] = dist[i] * np.exp(alpha)       
-    
+            new_dist[i] = dist[i] * np.exp(alpha)
+
     new_dist = new_dist / sum(new_dist)
-    
+
     return new_dist
 
 
@@ -119,6 +128,7 @@ def run_adaboost(instances, labels, weak_learner, num_iters=20):
         error = compute_error(h, instances, labels, dist)
 
         if error > 0.5:
+            print "error is " + str(error)
             break
 
         alpha = 0.5 * math.log((1-error)/error)
@@ -137,18 +147,15 @@ def run_adaboost(instances, labels, weak_learner, num_iters=20):
         The combination is stored in alpha_h.
         """
         alphas = np.array(alpha_h)[:, 0]
-        hs = np.array(alpha_h)[:, 1]        
-        
+        hs = np.array(alpha_h)[:, 1]
+
         n = len(alphas)
         hs_arr = np.empty(n)
-        
+
         for i in xrange(n):
             hs_arr[i] = hs[i](point)
-        
+
         return (alphas.dot(2 * hs_arr - 1) > 0) * 1
-        
-        
-    
 
     return classifier
 
