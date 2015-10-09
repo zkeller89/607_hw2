@@ -57,9 +57,6 @@ def weak_learner(instances, labels, dist):
         j_star = np.unravel_index(err_pos.argmin(), err_pos.shape)[1]
         theta = instances[np.unravel_index(err_pos.argmin(), err_pos.shape)]
     
-    print "threshold is " + str(theta)
-    print "j_star is " + str(j_star)
-    print "s is " + str(s)
     return lambda x: (s * x[j_star]) < theta
     
 
